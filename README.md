@@ -1,6 +1,7 @@
 # PasswordChecker
 
-PasswordChecker is a wrapper over [zxcvbn](https://github.com/dropbox/zxcvbn).
+PasswordChecker is a wrapper over [zxcvbn](https://github.com/dropbox/zxcvbn)   
+Dropbox's online zxcvbn test - https://lowe.github.io/tryzxcvbn/
 
 ## Example
 
