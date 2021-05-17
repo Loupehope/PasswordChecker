@@ -8,7 +8,7 @@ public enum PasswordCheckerError: Error {
 
 // For more, available properties - https://github.com/dropbox/zxcvbn#usage
 public struct PasswordInfo {
-    let score: Int32
+    public let score: Int32
 }
 
 public enum PasswordChecker {
