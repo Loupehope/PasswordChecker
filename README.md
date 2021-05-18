@@ -6,16 +6,20 @@ Dropbox's online zxcvbn test - https://lowe.github.io/tryzxcvbn/
 ## Example
 
 ```swift
-let password = "2-Ubvrr23dsf2"
+let passwordChecker = try? PasswordChecker()
 
-let result = PasswordChecker.getPasswordScore(password, userInputs: ["Max", "Petrov"])
-        
+let password = "2-Ubvrr23dsf2"
+let result = passwordChecker?.getPasswordScore(password, userInputs: ["Vlad", "2-Ubvrr23"])
+
 switch result {
 case let .success(passwordInfo):
     debugPrint(passwordInfo.score)
-
+    
 case let .failure(error):
     debugPrint(error.localizedDescription)
+    
+case .none:
+    assertionFailure("PasswordChecker is not initialised!")
 }
 ```
 
@@ -23,7 +27,7 @@ case let .failure(error):
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/Loupehope/PasswordChecker.git", .exact("1.0.0")),
+  .package(url: "https://github.com/Loupehope/PasswordChecker.git", .exact("1.1.0")),
 ],
 ```
 

@@ -11,53 +11,55 @@ public struct PasswordInfo {
     public let score: Int32
 }
 
-public enum PasswordChecker {
-
-    public static func getPasswordScore(_ password: String,
-                                        userInputs: [String] = []) -> Result<PasswordInfo, PasswordCheckerError> {
-
+public class PasswordChecker {
+    
+    private let jsContext: JSContext
+    
+    public init() throws {
         guard let jsContext = JSContext() else {
-            return .failure(PasswordCheckerError.unableToCreateJSContext)
+            throw PasswordCheckerError.unableToCreateJSContext
         }
-
+        
         guard let passwordCheckerPath = Bundle.module.path(forResource: JSScript.scriptName, ofType: JSScript.scriptType),
               let passwordCheckerJS = try? String(contentsOfFile: passwordCheckerPath, encoding: String.Encoding.utf8) else {
             
-            return .failure(PasswordCheckerError.unableToGetScript)
+            throw PasswordCheckerError.unableToGetScript
         }
-
+        
+        jsContext.exceptionHandler = { _, exception in
+            assertionFailure(exception?.toString() ?? JSScript.unknownError)
+        }
+        
         jsContext.evaluateScript(passwordCheckerJS)
-
-        jsContext.setObject(password, forKeyedSubscript: JSKey.password.asNSString)
-        jsContext.setObject(userInputs, forKeyedSubscript: JSKey.userInputs.asNSString)
-
-        guard let result = jsContext.evaluateScript(JSScript.scriptToEvaluate),
-              let score = result.objectForKeyedSubscript(JSKey.score.rawValue)?.toInt32() else {
-            
+        
+        self.jsContext = jsContext
+    }
+    
+    public func getPasswordScore(_ password: String,
+                                 userInputs: [String] = []) -> Result<PasswordInfo, PasswordCheckerError> {
+        
+        let result = jsContext.objectForKeyedSubscript(JSScript.scriptName)?
+            .call(withArguments: [password, userInputs])
+        
+        guard let score = result?.objectForKeyedSubscript(JSKey.score.rawValue)?.toInt32() else {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
-
+        
         let passwordInfo = PasswordInfo(score: score)
-
+        
         return .success(passwordInfo)
     }
 }
 
 private extension PasswordChecker {
-
+    
     enum JSKey: String, RawRepresentable {
-        case password
-        case userInputs = "user_inputs"
         case score
-
-        var asNSString: NSString {
-            rawValue as NSString
-        }
     }
-
+    
     enum JSScript {
         static let scriptName = "zxcvbn"
         static let scriptType = "js"
-        static let scriptToEvaluate = "zxcvbn(password, user_inputs)"
+        static let unknownError = "Unknown JSError"
     }
 }
