@@ -10,12 +10,12 @@ public enum PasswordCheckerError: Error {
 
 public struct PasswordInfo {
     public let guessesLog10: Double
-    public let crackTimesSeconds: [AnyHashable: Any]
-    public let crackTimesDisplay: [AnyHashable: Any]
+    public let crackTimesSeconds: [String: Double]
+    public let crackTimesDisplay: [String: String]
     public let score: Int32
     public let calcTime: Int32
 
-    public init(guessesLog10: Double = 0.0, crackTimesSeconds: [AnyHashable: Any] = [:], crackTimesDisplay: [AnyHashable: Any] = [:], score: Int32 = 0, calcTime: Int32 = 0) {
+    public init(guessesLog10: Double = 0.0, crackTimesSeconds: [String: Double] = [:], crackTimesDisplay: [String: String] = [:], score: Int32 = 0, calcTime: Int32 = 0) {
         self.guessesLog10 = guessesLog10
         self.crackTimesSeconds = crackTimesSeconds
         self.crackTimesDisplay = crackTimesDisplay
@@ -59,11 +59,11 @@ public class PasswordChecker {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
 
-        guard let crackTimesSeconds = result?.objectForKeyedSubscript(JSKey.crackTimesSeconds.rawValue)?.toDictionary() else {
+        guard let secondsDictionary = result?.objectForKeyedSubscript(JSKey.crackTimesSeconds.rawValue)?.toDictionary(), let crackTimesSeconds = secondsDictionary as? [String: Double] else {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
 
-        guard let crackTimesDisplay = result?.objectForKeyedSubscript(JSKey.crackTimesDisplay.rawValue)?.toDictionary() else {
+        guard let displayDictionary = result?.objectForKeyedSubscript(JSKey.crackTimesDisplay.rawValue)?.toDictionary(), let crackTimesDisplay = displayDictionary as? [String: String] else {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
 
