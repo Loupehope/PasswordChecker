@@ -9,19 +9,21 @@ public enum PasswordCheckerError: Error {
 // For more, available properties - https://github.com/dropbox/zxcvbn#usage
 
 public struct PasswordInfo {
-    public init(guessesLog10: Double, crackTimesDisplay: String, score: Int32, calcTime: Int32) {
+    public let guessesLog10: Double
+    public let crackTimesSeconds: [AnyHashable: Any]
+    public let crackTimesDisplay: [AnyHashable: Any]
+    public let score: Int32
+    public let calcTime: Int32
+
+    public init(guessesLog10: Double = 0.0, crackTimesSeconds: [AnyHashable: Any] = [:], crackTimesDisplay: [AnyHashable: Any] = [:], score: Int32 = 0, calcTime: Int32 = 0) {
         self.guessesLog10 = guessesLog10
+        self.crackTimesSeconds = crackTimesSeconds
         self.crackTimesDisplay = crackTimesDisplay
         self.score = score
         self.calcTime = calcTime
     }
 
-    public let guessesLog10: Double
-    public let crackTimesDisplay: String
-    public let score: Int32
-    public let calcTime: Int32
-
-    public static let zero = PasswordInfo(guessesLog10: 0, crackTimesDisplay: "", score: 0, calcTime: 0)
+    public static let empty = PasswordInfo()
 }
 
 public class PasswordChecker {
@@ -53,11 +55,15 @@ public class PasswordChecker {
         let result = jsContext.objectForKeyedSubscript(JSScript.scriptName)?
             .call(withArguments: [password, userInputs])
 
-        guard let guesses_log10 = result?.objectForKeyedSubscript(JSKey.guesses_log10.rawValue)?.toDouble() else {
+        guard let guessesLog10 = result?.objectForKeyedSubscript(JSKey.guessesLog10.rawValue)?.toDouble() else {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
 
-        guard let crack_times_display = result?.objectForKeyedSubscript(JSKey.crack_times_display.rawValue)?.toString() else {
+        guard let crackTimesSeconds = result?.objectForKeyedSubscript(JSKey.crackTimesSeconds.rawValue)?.toDictionary() else {
+            return .failure(PasswordCheckerError.unableToParseResult)
+        }
+
+        guard let crackTimesDisplay = result?.objectForKeyedSubscript(JSKey.crackTimesDisplay.rawValue)?.toDictionary() else {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
 
@@ -65,11 +71,11 @@ public class PasswordChecker {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
 
-        guard let calc_time = result?.objectForKeyedSubscript(JSKey.calc_time.rawValue)?.toInt32() else {
+        guard let calcTime = result?.objectForKeyedSubscript(JSKey.calcTime.rawValue)?.toInt32() else {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
 
-        let passwordInfo = PasswordInfo(guessesLog10: guesses_log10, crackTimesDisplay: crack_times_display, score: score, calcTime: calc_time)
+        let passwordInfo = PasswordInfo(guessesLog10: guessesLog10, crackTimesSeconds: crackTimesSeconds, crackTimesDisplay: crackTimesDisplay, score: score, calcTime: calcTime)
 
         return .success(passwordInfo)
     }
@@ -78,7 +84,11 @@ public class PasswordChecker {
 private extension PasswordChecker {
 
     enum JSKey: String, RawRepresentable {
-        case guesses_log10, crack_times_display, score, calc_time
+        case guessesLog10 = "guesses_log10"
+        case crackTimesSeconds = "crack_times_seconds"
+        case crackTimesDisplay = "crack_times_display"
+        case score
+        case calcTime = "calc_time"
     }
 
     enum JSScript {
