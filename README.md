@@ -31,5 +31,5 @@ dependencies: [
 ],
 ```
 
-
-
+Useful scripts:
+- `./scripts/lint.sh` - run project's linter
