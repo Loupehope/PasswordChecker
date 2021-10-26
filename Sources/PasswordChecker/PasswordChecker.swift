@@ -57,7 +57,7 @@ public class PasswordChecker {
         let result = jsContext.objectForKeyedSubscript(JSScript.scriptName)?
             .call(withArguments: [password, userInputs])
         
-        guard let guesses = result?.objectForKeyedSubscript(JSKey.guesses.rawValue)?.toInt32()() else {
+        guard let guesses = result?.objectForKeyedSubscript(JSKey.guesses.rawValue)?.toInt32() else {
             return .failure(PasswordCheckerError.unableToParseResult)
         }
 
