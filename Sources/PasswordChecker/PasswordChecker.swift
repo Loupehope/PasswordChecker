@@ -17,6 +17,7 @@ public struct PasswordInfo {
     public let calcTime: Int32
 
     public init(guesses: Int32 = 0, guessesLog10: Double = 0.0, crackTimesSeconds: [String: Double] = [:], crackTimesDisplay: [String: String] = [:], score: Int32 = 0, calcTime: Int32 = 0) {
+        self.guesses = guesses
         self.guessesLog10 = guessesLog10
         self.crackTimesSeconds = crackTimesSeconds
         self.crackTimesDisplay = crackTimesDisplay
