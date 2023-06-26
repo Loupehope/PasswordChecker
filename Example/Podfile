@@ -1,0 +1,7 @@
+use_frameworks!
+
+platform :ios, '11.0'
+
+target 'PasswordChecker_Example' do
+  pod 'PasswordChecker', :path => '../'
+end

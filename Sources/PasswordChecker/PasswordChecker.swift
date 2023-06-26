@@ -42,7 +42,7 @@ public class PasswordChecker {
             throw PasswordCheckerError.unableToCreateJSContext
         }
 
-        guard let passwordCheckerPath = Bundle.module.path(forResource: JSScript.scriptName, ofType: JSScript.scriptType),
+        guard let passwordCheckerPath = Bundle.resources?.path(forResource: JSScript.scriptName, ofType: JSScript.scriptType),
               let passwordCheckerJS = try? String(contentsOfFile: passwordCheckerPath, encoding: String.Encoding.utf8) else {
 
             throw PasswordCheckerError.unableToGetScript
