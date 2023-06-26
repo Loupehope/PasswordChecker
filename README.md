@@ -25,6 +25,17 @@ case .none:
 
 ## Installation
 
+### Cocoapods
+PasswordChecker is available through CocoaPods. To install it, simply add the following line to your Podfile:
+```pod 'PasswordChecker' ```
+
+### Swift Package Manager
+File > Swift Packages > Add Package Dependency
+
+OR
+
+Update dependencies in ```Package.swift```
+
 ```swift
 dependencies: [
   .package(url: "https://github.com/Loupehope/PasswordChecker.git", .exact("1.1.0")),
