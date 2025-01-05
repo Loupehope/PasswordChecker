@@ -8,9 +8,12 @@ let package = Package(
         .library(name: "PasswordChecker", targets: ["PasswordChecker"]),
     ],
     targets: [
-        .target(name: "PasswordChecker",
-                resources: [
-                    .process("zxcvbn")
-                ]),
+        .target(
+            name: "PasswordChecker",
+            resources: [
+                .process("zxcvbn"),
+                .process("PrivacyInfo.xcprivacy"),
+            ]
+        ),
     ]
 )
