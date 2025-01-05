@@ -8,7 +8,7 @@ public enum PasswordCheckerError: Error {
 
 // For more, available properties - https://github.com/dropbox/zxcvbn#usage
 
-public struct PasswordInfo {
+public struct PasswordInfo: Sendable, Decodable {
     public let guesses: Int32
     public let guessesLog10: Double
     public let crackTimesSeconds: [String: Double]
@@ -16,12 +16,14 @@ public struct PasswordInfo {
     public let score: Int32
     public let calcTime: Int32
 
-    public init(guesses: Int32 = 0,
-                guessesLog10: Double = 0.0,
-                crackTimesSeconds: [String: Double] = [:],
-                crackTimesDisplay: [String: String] = [:],
-                score: Int32 = 0,
-                calcTime: Int32 = 0) {
+    public init(
+        guesses: Int32 = 0,
+        guessesLog10: Double = 0.0,
+        crackTimesSeconds: [String: Double] = [:],
+        crackTimesDisplay: [String: String] = [:],
+        score: Int32 = 0,
+        calcTime: Int32 = 0
+    ) {
         self.guesses = guesses
         self.guessesLog10 = guessesLog10
         self.crackTimesSeconds = crackTimesSeconds
@@ -29,12 +31,20 @@ public struct PasswordInfo {
         self.score = score
         self.calcTime = calcTime
     }
-
+    
     public static let empty = PasswordInfo()
+    
+    enum CodingKeys: String, CodingKey {
+        case guesses = "guesses"
+        case guessesLog10 = "guesses_log10"
+        case crackTimesSeconds = "crack_times_seconds"
+        case crackTimesDisplay = "crack_times_display"
+        case score
+        case calcTime = "calc_time"
+    }
 }
 
-public class PasswordChecker {
-
+public final class PasswordChecker {
     private let jsContext: JSContext
 
     public init() throws {
@@ -58,58 +68,21 @@ public class PasswordChecker {
     }
 
     public func getPasswordScore(_ password: String, userInputs: [String] = []) -> Result<PasswordInfo, PasswordCheckerError> {
-
-        let result = jsContext.objectForKeyedSubscript(JSScript.scriptName)?
-            .call(withArguments: [password, userInputs])
-
-        guard let guesses = result?.objectForKeyedSubscript(JSKey.guesses.rawValue)?.toInt32() else {
-            return .failure(PasswordCheckerError.unableToParseResult)
+        guard let script = jsContext.objectForKeyedSubscript(JSScript.scriptName),
+              let result = script.call(withArguments: [password, userInputs]).toDictionary() else {
+            return .failure(.unableToParseResult)
         }
-
-        guard let guessesLog10 = result?.objectForKeyedSubscript(JSKey.guessesLog10.rawValue)?.toDouble() else {
-            return .failure(PasswordCheckerError.unableToParseResult)
+        
+        if let dataResult = try? JSONSerialization.data(withJSONObject: result),
+           let parsedResult = try? JSONDecoder().decode(PasswordInfo.self, from: dataResult) {
+            return .success(parsedResult)
+        } else {
+            return .failure(.unableToParseResult)
         }
-
-        guard let secondsDictionary = result?.objectForKeyedSubscript(JSKey.crackTimesSeconds.rawValue)?.toDictionary(),
-              let crackTimesSeconds = secondsDictionary as? [String: Double] else {
-            return .failure(PasswordCheckerError.unableToParseResult)
-        }
-
-        guard let displayDictionary = result?.objectForKeyedSubscript(JSKey.crackTimesDisplay.rawValue)?.toDictionary(),
-              let crackTimesDisplay = displayDictionary as? [String: String] else {
-            return .failure(PasswordCheckerError.unableToParseResult)
-        }
-
-        guard let score = result?.objectForKeyedSubscript(JSKey.score.rawValue)?.toInt32() else {
-            return .failure(PasswordCheckerError.unableToParseResult)
-        }
-
-        guard let calcTime = result?.objectForKeyedSubscript(JSKey.calcTime.rawValue)?.toInt32() else {
-            return .failure(PasswordCheckerError.unableToParseResult)
-        }
-
-        let passwordInfo = PasswordInfo(guesses: guesses,
-                                        guessesLog10: guessesLog10,
-                                        crackTimesSeconds: crackTimesSeconds,
-                                        crackTimesDisplay: crackTimesDisplay,
-                                        score: score,
-                                        calcTime: calcTime)
-
-        return .success(passwordInfo)
     }
 }
 
 private extension PasswordChecker {
-
-    enum JSKey: String, RawRepresentable {
-        case guesses = "guesses"
-        case guessesLog10 = "guesses_log10"
-        case crackTimesSeconds = "crack_times_seconds"
-        case crackTimesDisplay = "crack_times_display"
-        case score
-        case calcTime = "calc_time"
-    }
-
     enum JSScript {
         static let scriptName = "zxcvbn"
         static let scriptType = "js"

@@ -38,7 +38,7 @@ Update dependencies in ```Package.swift```
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/Loupehope/PasswordChecker.git", .exact("1.1.0")),
+  .package(url: "https://github.com/Loupehope/PasswordChecker.git", .exact("1.5.0")),
 ],
 ```
 
